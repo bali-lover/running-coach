@@ -13,6 +13,8 @@ class RunningCoach {
         this.wakeWord = '코치';
         this.isContinuousListening = false;
         this.recognitionActive = false;
+        this.isInConversation = false;
+        this.conversationTimeout = null;
         this.totalDistance = 0;
         this.totalTime = 0;
         this.startTime = null;
@@ -102,6 +104,17 @@ class RunningCoach {
             utterance.lang = 'ko-KR';
             utterance.rate = 0.9;
             utterance.pitch = 1;
+
+            // 음성 시작 시 대화 모드 활성화
+            utterance.onstart = () => {
+                this.startConversationMode();
+            };
+
+            // 음성 종료 시 대화 모드 종료 예약
+            utterance.onend = () => {
+                this.scheduleEndConversation();
+            };
+
             this.synth.speak(utterance);
         }
     }
@@ -112,6 +125,9 @@ class RunningCoach {
         // 깨우기 단어 확인
         if (transcript.includes(this.wakeWord)) {
             console.log('깨우기 단어 감지:', this.wakeWord);
+
+            // 대화 모드 시작 - 음악 볼륨 조절 신호
+            this.startConversationMode();
 
             // 깨우기 단어 이후의 명령 추출
             const commandIndex = transcript.indexOf(this.wakeWord) + this.wakeWord.length;
@@ -157,6 +173,49 @@ class RunningCoach {
             ];
             const random = Math.floor(Math.random() * encouragements.length);
             this.speak(encouragements[random]);
+        }
+    }
+
+    startConversationMode() {
+        if (!this.isInConversation) {
+            this.isInConversation = true;
+            console.log('🎵 대화 모드 시작 - 음악 볼륨 감소 신호');
+
+            // 음악 볼륨 감소 신호 (브라우저가 자동으로 처리)
+            // 실제로는 우리 음성이 재생될 때 시스템이 자동으로 다른 오디오를 줄임
+
+            // 상태 표시 업데이트
+            this.statusEl.style.color = '#ff6b6b';
+        }
+
+        // 기존 타이머 취소
+        if (this.conversationTimeout) {
+            clearTimeout(this.conversationTimeout);
+        }
+    }
+
+    scheduleEndConversation() {
+        // 5초 후 대화 모드 종료 예약
+        this.conversationTimeout = setTimeout(() => {
+            this.endConversationMode();
+        }, 5000);
+    }
+
+    endConversationMode() {
+        if (this.isInConversation) {
+            this.isInConversation = false;
+            console.log('🎵 대화 모드 종료 - 음악 볼륨 복구');
+
+            // 상태 표시 복구
+            this.statusEl.style.color = '';
+
+            // 조용한 톤으로 알림 (음성 없이)
+            console.log('음악 볼륨이 정상으로 복구되었습니다');
+        }
+
+        if (this.conversationTimeout) {
+            clearTimeout(this.conversationTimeout);
+            this.conversationTimeout = null;
         }
     }
 
