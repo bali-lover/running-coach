@@ -172,8 +172,30 @@ class RunningCoach {
     }
 
     setTargetPace(min = null, sec = null) {
-        const minutes = min || parseInt(this.targetMinEl.value) || 5;
-        const seconds = sec || parseInt(this.targetSecEl.value) || 30;
+        let minutes, seconds;
+
+        if (min !== null && sec !== null) {
+            // 음성 명령으로 호출된 경우
+            minutes = min;
+            seconds = sec;
+        } else {
+            // 버튼으로 호출된 경우
+            const minInput = this.targetMinEl.value.trim();
+            const secInput = this.targetSecEl.value.trim();
+
+            minutes = minInput ? parseInt(minInput) : 5;
+            seconds = secInput ? parseInt(secInput) : 30;
+
+            // 유효성 검증
+            if (isNaN(minutes) || minutes < 3 || minutes > 10) {
+                alert('분은 3-10 사이로 입력해주세요');
+                return;
+            }
+            if (isNaN(seconds) || seconds < 0 || seconds > 59) {
+                alert('초는 0-59 사이로 입력해주세요');
+                return;
+            }
+        }
 
         this.targetPaceSeconds = minutes * 60 + seconds;
         this.targetPaceEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -181,6 +203,9 @@ class RunningCoach {
         // 입력 필드 초기화
         this.targetMinEl.value = '';
         this.targetSecEl.value = '';
+
+        // 설정 완료 알림
+        this.speak(`목표 페이스를 ${minutes}분 ${seconds}초로 설정했습니다`);
     }
 
     toggleRunning() {
