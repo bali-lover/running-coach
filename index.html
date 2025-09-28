@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>러닝 페이스 코치</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2196F3">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .pace-display {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .current-pace {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .target-pace {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        input {
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-align: center;
+            font-size: 1.1rem;
+            width: 60px;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .start-btn {
+            background: #4CAF50;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .stop-btn {
+            background: #f44336;
+        }
+
+        .status {
+            margin-top: 1rem;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏃‍♂️ 러닝 페이스 코치</h1>
+
+        <div class="pace-display">
+            <div class="current-pace" id="currentPace">0:00</div>
+            <div class="target-pace">목표: <span id="targetPace">5:30</span> /km</div>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">평균 페이스</div>
+                    <div class="stat-value" id="avgPace">0:00</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">총 거리</div>
+                    <div class="stat-value" id="totalDistance">0.00km</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">최근 1km</div>
+                    <div class="stat-value" id="lastKmPace">0:00</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="input-group">
+                <label>목표 페이스:</label>
+                <input type="number" id="targetMin" placeholder="5" min="3" max="10">
+                <span>:</span>
+                <input type="number" id="targetSec" placeholder="30" min="0" max="59">
+                <span>/km</span>
+                <button onclick="setTargetPace()">설정</button>
+            </div>
+
+            <button id="startBtn" class="start-btn" onclick="toggleRunning()">시작하기</button>
+
+            <div class="input-group">
+                <label>깨우기 단어:</label>
+                <input type="text" id="wakeWord" placeholder="코치" value="코치">
+                <button onclick="setWakeWord()">설정</button>
+            </div>
+
+            <button onclick="toggleContinuousListening()">🎤 음성 대기 시작</button>
+        </div>
+
+        <div class="status" id="status">GPS 준비 중...</div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // 서비스 워커 등록
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('SW 등록 성공:', registration.scope);
+                    }, function(err) {
+                        console.log('SW 등록 실패:', err);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
