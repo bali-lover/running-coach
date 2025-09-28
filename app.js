@@ -147,6 +147,9 @@ class RunningCoach {
 
             if (command) {
                 this.processVoiceCommand(command);
+            } else {
+                // 명령 없이 깨우기 단어만 말한 경우
+                this.speak('네, 무엇을 도와드릴까요?');
             }
         }
     }
@@ -163,7 +166,10 @@ class RunningCoach {
                 this.setTargetPace(min, sec);
                 this.speak(`목표를 ${min}분 ${sec}초로 설정했습니다`);
             }
-        } else if (command.includes('현재') && command.includes('페이스')) {
+        } else if ((command.includes('현재') && command.includes('페이스')) ||
+                   command.includes('페이스는') ||
+                   command.includes('지금 페이스') ||
+                   command.includes('현재 속도')) {
             const pace = this.formatPace(this.currentPace);
             this.speak(`현재 ${pace} 페이스로 달리고 있습니다`);
         } else if (command.includes('일시정지') || command.includes('멈춰')) {
@@ -185,6 +191,39 @@ class RunningCoach {
             ];
             const random = Math.floor(Math.random() * encouragements.length);
             this.speak(encouragements[random]);
+        } else if (command.includes('총 거리') || command.includes('전체 거리')) {
+            if (this.totalDistance > 0) {
+                this.speak(`총 거리는 ${this.totalDistance.toFixed(2)}킬로미터입니다`);
+            } else {
+                this.speak('아직 러닝을 시작하지 않았습니다');
+            }
+        } else if (command.includes('평균 페이스') || command.includes('평균')) {
+            if (this.totalDistance > 0) {
+                const avgPaceSeconds = this.totalTime / this.totalDistance;
+                const avgPace = this.formatPace(avgPaceSeconds);
+                this.speak(`평균 페이스는 ${avgPace}입니다`);
+            } else {
+                this.speak('아직 러닝을 시작하지 않았습니다');
+            }
+        } else if (command.includes('몇 킬로') || command.includes('몇 킬로미터') || command.includes('거리')) {
+            if (this.totalDistance > 0) {
+                const km = Math.floor(this.totalDistance * 10) / 10; // 소수점 1자리
+                this.speak(`${km}킬로미터 뛰었습니다`);
+            } else {
+                this.speak('아직 러닝을 시작하지 않았습니다');
+            }
+        } else if (command.includes('시간') || command.includes('몇 분')) {
+            if (this.totalTime > 0) {
+                const minutes = Math.floor(this.totalTime / 60);
+                const seconds = Math.floor(this.totalTime % 60);
+                if (minutes > 0) {
+                    this.speak(`${minutes}분 ${seconds}초 뛰었습니다`);
+                } else {
+                    this.speak(`${seconds}초 뛰었습니다`);
+                }
+            } else {
+                this.speak('아직 러닝을 시작하지 않았습니다');
+            }
         }
     }
 
