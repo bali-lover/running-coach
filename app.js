@@ -21,6 +21,7 @@ class RunningCoach {
 
         this.initializeElements();
         this.initializeVoice();
+        this.initializeDisplay();
         this.requestLocation();
     }
 
@@ -82,6 +83,17 @@ class RunningCoach {
                 }
             };
         }
+    }
+
+    initializeDisplay() {
+        // 초기 목표 페이스 표시
+        const minutes = Math.floor(this.targetPaceSeconds / 60);
+        const seconds = this.targetPaceSeconds % 60;
+        this.targetPaceEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        // 초기 placeholder도 현재 목표값으로 설정
+        this.targetMinEl.placeholder = minutes;
+        this.targetSecEl.placeholder = seconds;
     }
 
     speak(text) {
@@ -200,9 +212,11 @@ class RunningCoach {
         this.targetPaceSeconds = minutes * 60 + seconds;
         this.targetPaceEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
-        // 입력 필드 초기화
+        // 입력 필드 초기화 및 placeholder 업데이트
         this.targetMinEl.value = '';
         this.targetSecEl.value = '';
+        this.targetMinEl.placeholder = minutes;
+        this.targetSecEl.placeholder = seconds;
 
         // 설정 완료 알림
         this.speak(`목표 페이스를 ${minutes}분 ${seconds}초로 설정했습니다`);
