@@ -75,6 +75,8 @@ class RunningCoach {
 
             this.recognition.onerror = (event) => {
                 console.log('음성 인식 오류:', event.error);
+                this.recognitionActive = false;
+
                 if (event.error === 'no-speech' && this.isContinuousListening) {
                     // 말이 없으면 다시 시작
                     setTimeout(() => {
@@ -82,6 +84,16 @@ class RunningCoach {
                             this.startListening();
                         }
                     }, 1000);
+                } else if (event.error === 'not-allowed') {
+                    alert('마이크 권한을 허용해주세요');
+                    this.isContinuousListening = false;
+                } else if (event.error === 'network') {
+                    console.log('네트워크 오류 - 음성 인식 재시도');
+                    setTimeout(() => {
+                        if (this.isContinuousListening) {
+                            this.startListening();
+                        }
+                    }, 2000);
                 }
             };
         }
